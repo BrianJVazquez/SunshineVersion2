@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <EditTextPreference android:id="@+id/textPreference"
+        android:title="@string/pref_location_label"
+        android:key="@string/pref_location_key"
+        android:singleLine="true"
+        android:inputType="text"
+        android:defaultValue="@string/pref_location_text"/>
+
+    <ListPreference
+        android:title="@string/pref_units_label"
+        android:summary="Select desired units"
+        android:key="@string/pref_units_key"
+        android:defaultValue="1"
+        android:entries="@array/units_array"
+        android:entryValues="@array/units_array_values"/>
+
+    <CheckBoxPreference
+        android:id="@+id/checkbox"
+        android:title="@string/pref_notify_label"
+        android:key="@string/pref_notify_key"
+        android:summaryOn="@string/pref_enable_notification_true"
+        android:summaryOff="@string/pref_enable_notification_false"
+        android:defaultValue="@string/pref_enable_notifications_default"/>
+
+</PreferenceScreen>
