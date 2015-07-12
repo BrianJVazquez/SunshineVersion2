@@ -263,7 +263,7 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
     private void updateEmptyView() {
         if ( mForecastAdapter.getCount() == 0 ) {
             TextView tv = (TextView) getView().findViewById(R.id.listview_forecast_empty);
-            if (tv == null) {
+            if (tv != null) {
                 // if cursor is empty, why? do we have an invalid location
                 int message = R.string.empty_forecast_string;
                 if (!Utility.isNetworkAvailable(getActivity()) ) {
