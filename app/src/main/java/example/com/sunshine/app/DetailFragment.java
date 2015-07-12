@@ -87,7 +87,7 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
 
         Bundle arguments = getArguments();
         if(arguments != null) {
-            mUri = arguments.getParcelable(DetailFragment.DETAIL_URI);
+            mUri = arguments.getParcelable(DETAIL_URI);
         }
         View rootView = inflater.inflate(R.layout.fragment_detail, container, false);
         mIconView = (ImageView) rootView.findViewById(R.id.detail_icon);

@@ -15,8 +15,6 @@
  */
 package example.com.sunshine.app;
 
-import android.app.AlarmManager;
-import android.app.PendingIntent;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
@@ -34,6 +32,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.TextView;
 
 import example.com.sunshine.app.data.WeatherContract;
 import example.com.sunshine.app.sync.SunshineSyncAdapter;
@@ -48,8 +47,6 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
     private int mPosition = ListView.INVALID_POSITION;
     private ListView mListView;
     private static final String SELECTED_KEY = "selected_position";
-    private AlarmManager alarmMgr;
-    private PendingIntent alarmIntent;
 
     private static final String[] FORECAST_COLUMNS = {
             // In this case the id needs to be fully qualified with a table name, since
@@ -168,8 +165,10 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
 
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
+        View emptyView = rootView.findViewById(R.id.listview_forecast_empty);
         // Get a reference to the ListView, and attach this adapter to it.
         mListView = (ListView) rootView.findViewById(R.id.listview_forecast);
+        mListView.setEmptyView(emptyView);
         mListView.setAdapter(mForecastAdapter);
         mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
@@ -233,10 +232,10 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
     public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor cursor) {
         mForecastAdapter.swapCursor(cursor);
         if (mPosition != ListView.INVALID_POSITION) {
-            // If we don't need to restart the loader, and there's a desired position to restore
-            // to, do so now.
             mListView.smoothScrollToPosition(mPosition);
         }
+        updateEmptyView();
+
     }
 
     @Override
@@ -258,6 +257,20 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
         /**
          * DetailFragmentCallback for when an item has been selected.
          */
-        public void onItemSelected(Uri dateUri);
+        void onItemSelected(Uri dateUri);
+    }
+
+    private void updateEmptyView() {
+        if ( mForecastAdapter.getCount() == 0 ) {
+            TextView tv = (TextView) getView().findViewById(R.id.listview_forecast_empty);
+            if (tv == null) {
+                // if cursor is empty, why? do we have an invalid location
+                int message = R.string.empty_forecast_string;
+                if (!Utility.isNetworkAvailable(getActivity()) ) {
+                    message = R.string.empty_network_connection;
+                }
+                tv.setText(message);
+            }
+        }
     }
 }

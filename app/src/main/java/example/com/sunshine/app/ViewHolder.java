@@ -22,5 +22,4 @@ public class ViewHolder {
         dateView = (TextView)view.findViewById(R.id.list_item_date_textview);
         iconView = (ImageView)view.findViewById(R.id.list_item_icon);
     }
-
 }
