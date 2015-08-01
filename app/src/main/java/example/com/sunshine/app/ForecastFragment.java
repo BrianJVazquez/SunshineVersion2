@@ -16,6 +16,7 @@
 package example.com.sunshine.app;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -47,6 +48,17 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
     private int mPosition = ListView.INVALID_POSITION;
     private ListView mListView;
     private static final String SELECTED_KEY = "selected_position";
+    public SharedPreferences sharedPreferences;
+    public SharedPreferences.OnSharedPreferenceChangeListener mListener = new SharedPreferences.OnSharedPreferenceChangeListener() {
+
+        @Override
+        public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+           if(key.equals(getString(R.string.pref_location_status_key))){
+               updateEmptyView();
+           }
+        }
+    };
+
 
     private static final String[] FORECAST_COLUMNS = {
             // In this case the id needs to be fully qualified with a table name, since
@@ -93,6 +105,10 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         // Add this line in order for this fragment to handle menu events.
+        sharedPreferences = getActivity().getSharedPreferences(
+                getString(R.string.pref_location_status_key),
+                SunshineSyncAdapter.LOCATION_STATUS_SERVER_INVALID);
+
         setHasOptionsMenu(true);
     }
 
@@ -126,8 +142,6 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
         return super.onOptionsItemSelected(item);
     }
     private void openPreferredLocationInMap() {
-        String location = Utility.getPreferredLocation(getActivity());
-
         if(mForecastAdapter != null){
             // Using the URI scheme for showing a location found on a map.  This super-handy
             // intent can is detailed in the "Common Intents" page of Android's developer site:
@@ -143,7 +157,7 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
             if (intent.resolveActivity(getActivity().getPackageManager()) != null) {
                 startActivity(intent);
             } else {
-                Log.d(LOG_TAG, "Couldn't call " + location + ", no receiving apps installed!");
+                Log.d(LOG_TAG, "Couldn't call " + geoLocation + ", no receiving apps installed!");
             }
             c.close();
         }
@@ -231,6 +245,7 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
     @Override
     public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor cursor) {
         mForecastAdapter.swapCursor(cursor);
+
         if (mPosition != ListView.INVALID_POSITION) {
             mListView.smoothScrollToPosition(mPosition);
         }
@@ -245,7 +260,7 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
 
     public void onLocationChanged(){
         updateWeather();
-        getLoaderManager().restartLoader(FORECAST_LOADER,null,this);
+        getLoaderManager().restartLoader(FORECAST_LOADER, null, this);
     }
 
     /**
@@ -265,12 +280,37 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
             TextView tv = (TextView) getView().findViewById(R.id.listview_forecast_empty);
             if (tv != null) {
                 // if cursor is empty, why? do we have an invalid location
-                int message = R.string.empty_forecast_string;
-                if (!Utility.isNetworkAvailable(getActivity()) ) {
-                    message = R.string.empty_network_connection;
+                int message = R.string.empty_forecast_list;
+               @SunshineSyncAdapter.locationStatus int location = Utility.getLocationStatus(getActivity());
+                switch (location){
+                    case SunshineSyncAdapter.LOCATION_STATUS_SERVER_DOWN:
+                        message = R.string.empty_forecast_list_server_down;
+                        break;
+                    case SunshineSyncAdapter.LOCATION_STATUS_SERVER_INVALID:
+                        message = R.string.empty_forecast_list_server_error;
+                        break;
+                    case SunshineSyncAdapter.LOCATION_STATUS_INVALID:
+                        message = R.string.empty_forecast_list_invalid_location;
+                        break;
+                    default:
+                        if(!Utility.isNetworkAvailable(getActivity())){
+                            message = R.string.empty_forecast_list_no_network;
+                        }
                 }
                 tv.setText(message);
             }
         }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        sharedPreferences.registerOnSharedPreferenceChangeListener(mListener);
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        sharedPreferences.unregisterOnSharedPreferenceChangeListener(mListener);
     }
 }
